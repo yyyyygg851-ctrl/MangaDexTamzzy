@@ -1,0 +1,3746 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#020711">
+<title>TAMZZY — MANGADEX</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --bg:#020711;
+ --panel:#061321;
+ --panel2:#091a2d;
+ --line:rgba(55,170,255,.16);
+ --blue:#159cff;
+ --cyan:#42dcff;
+ --text:#edf8ff;
+ --muted:#7593aa;
+ --danger:#ff5278
+}
+html,body{
+ min-height:100%;
+ background:var(--bg);
+ color:var(--text);
+ font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif
+}
+body{overflow-x:hidden}
+button,input,select{font:inherit}
+button{cursor:pointer}
+
+/* BACKGROUND */
+#background{
+ position:fixed;
+ inset:0;
+ z-index:-10;
+ overflow:hidden;
+ background:
+ radial-gradient(circle at 10% 10%,rgba(0,125,255,.16),transparent 28%),
+ radial-gradient(circle at 90% 80%,rgba(0,220,255,.08),transparent 30%),
+ #020711
+}
+.grid{
+ position:absolute;
+ inset:-100px;
+ background-image:
+ linear-gradient(rgba(40,160,255,.055) 1px,transparent 1px),
+ linear-gradient(90deg,rgba(40,160,255,.055) 1px,transparent 1px);
+ background-size:42px 42px;
+ animation:gridMove 20s linear infinite
+}
+@keyframes gridMove{
+ to{transform:translate(42px,42px)}
+}
+.orb{
+ position:absolute;
+ width:270px;
+ height:270px;
+ border-radius:50%;
+ filter:blur(70px);
+ opacity:.18;
+ animation:orbMove 10s ease-in-out infinite alternate
+}
+.orb1{
+ left:-100px;
+ top:12%;
+ background:#008cff
+}
+.orb2{
+ right:-120px;
+ bottom:5%;
+ background:#00d9ff;
+ animation-delay:2s
+}
+@keyframes orbMove{
+ to{transform:translate(70px,-45px) scale(1.12)}
+}
+#particles{
+ position:absolute;
+ inset:0
+}
+.particle{
+ position:absolute;
+ width:2px;
+ height:2px;
+ border-radius:50%;
+ background:#4ccaff;
+ box-shadow:0 0 10px #159cff;
+ animation:particleMove linear infinite
+}
+@keyframes particleMove{
+ from{transform:translateY(105vh);opacity:0}
+ 10%{opacity:.7}
+ 90%{opacity:.7}
+ to{transform:translateY(-10vh);opacity:0}
+}
+#cursorGlow{
+ position:fixed;
+ width:190px;
+ height:190px;
+ border-radius:50%;
+ pointer-events:none;
+ z-index:0;
+ transform:translate(-50%,-50%);
+ background:radial-gradient(circle,rgba(21,156,255,.13),transparent 68%)
+}
+
+/* TOPBAR */
+.topbar{
+ position:sticky;
+ top:0;
+ z-index:100;
+ height:67px;
+ display:flex;
+ align-items:center;
+ gap:12px;
+ padding:10px 15px;
+ background:rgba(2,8,17,.76);
+ border-bottom:1px solid rgba(65,163,255,.13);
+ backdrop-filter:blur(20px)
+}
+.brand{
+ min-width:max-content;
+ font-weight:1000;
+ letter-spacing:2px;
+ text-shadow:0 0 20px #159cff
+}
+.brand small{
+ display:block;
+ font-size:8px;
+ color:#4ca8e8;
+ letter-spacing:3px
+}
+.search{
+ flex:1;
+ max-width:600px;
+ margin:auto
+}
+.search input{
+ width:100%;
+ padding:11px 15px;
+ color:#fff;
+ background:#06111f;
+ border:1px solid rgba(75,164,255,.17);
+ border-radius:14px;
+ outline:none;
+ transition:.25s
+}
+.search input:focus{
+ border-color:#159cff;
+ box-shadow:0 0 20px rgba(21,156,255,.12)
+}
+.iconBtn,.userBtn{
+ border:1px solid rgba(66,165,255,.16);
+ background:#071321;
+ color:#bce9ff;
+ border-radius:13px;
+ transition:.2s
+}
+.iconBtn{
+ width:50px;
+ height:42px;
+ font-size:10px;
+ font-weight:900
+}
+.userBtn{
+ max-width:130px;
+ padding:10px 13px;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap
+}
+.iconBtn:hover,.userBtn:hover{
+ border-color:#159cff;
+ box-shadow:0 0 20px rgba(21,156,255,.16)
+}
+
+/* LAYOUT */
+.layout{
+ display:flex;
+ min-height:calc(100vh - 67px)
+}
+.sidebar{
+ width:225px;
+ flex:none;
+ padding:18px 12px;
+ border-right:1px solid rgba(66,165,255,.11);
+ background:rgba(3,10,19,.55)
+}
+.navTitle{
+ color:#557894;
+ font-size:9px;
+ font-weight:900;
+ letter-spacing:2px;
+ margin:7px 10px
+}
+.navBtn{
+ width:100%;
+ text-align:left;
+ border:0;
+ padding:12px;
+ border-radius:12px;
+ background:transparent;
+ color:#8da8bf;
+ margin:3px 0;
+ transition:.2s
+}
+.navBtn:hover,.navBtn.active{
+ color:#fff;
+ background:rgba(20,150,255,.1);
+ box-shadow:inset 3px 0 #159cff
+}
+.content{
+ flex:1;
+ min-width:0;
+ padding:22px
+}
+
+/* HERO */
+.hero{
+ position:relative;
+ overflow:hidden;
+ border:1px solid rgba(55,167,255,.16);
+ border-radius:24px;
+ padding:27px;
+ background:
+ radial-gradient(circle at 80% 10%,rgba(22,159,255,.16),transparent 30%),
+ linear-gradient(130deg,rgba(8,24,44,.95),rgba(3,11,21,.9));
+ box-shadow:0 0 35px rgba(0,145,255,.13);
+ animation:fadeUp .65s ease
+}
+.hero h1{
+ font-size:clamp(28px,5vw,46px);
+ line-height:1;
+ font-weight:1000
+}
+.hero h1 span{
+ color:#36d5ff;
+ text-shadow:0 0 25px rgba(54,213,255,.35)
+}
+.hero p{
+ max-width:680px;
+ margin-top:11px;
+ color:#7593ad;
+ line-height:1.6;
+ font-size:13px
+}
+.stats{
+ display:flex;
+ flex-wrap:wrap;
+ gap:8px;
+ margin-top:18px
+}
+.stat{
+ padding:8px 11px;
+ border-radius:11px;
+ border:1px solid rgba(63,164,255,.15);
+ background:rgba(9,26,46,.7);
+ color:#8cb5d4;
+ font-size:10px
+}
+
+/* SECTION */
+.sectionHead{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:10px;
+ margin:27px 0 14px
+}
+.sectionHead h2{font-size:18px}
+.select{
+ color:#a7c7df;
+ background:#071321;
+ border:1px solid rgba(63,164,255,.14);
+ padding:9px;
+ border-radius:10px;
+ outline:none
+}
+
+/* MANGA */
+.gridManga{
+ display:grid;
+ grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
+ gap:14px
+}
+.manga{
+ position:relative;
+ overflow:hidden;
+ border:1px solid rgba(61,161,255,.13);
+ background:rgba(7,18,32,.78);
+ border-radius:17px;
+ transition:.3s;
+ cursor:pointer;
+ animation:cardIn .55s both
+}
+.manga:hover{
+ transform:translateY(-6px);
+ border-color:rgba(53,185,255,.42);
+ box-shadow:0 15px 35px rgba(0,100,190,.18)
+}
+.cover{
+ aspect-ratio:2/3;
+ width:100%;
+ object-fit:cover;
+ display:block;
+ background:#081321
+}
+.mangaInfo{padding:11px}
+.mangaTitle{
+ font-size:12px;
+ font-weight:800;
+ line-height:1.35;
+ display:-webkit-box;
+ -webkit-line-clamp:2;
+ -webkit-box-orient:vertical;
+ overflow:hidden
+}
+.mangaMeta{
+ margin-top:7px;
+ color:#64839d;
+ font-size:9px
+}
+.cardGlow{
+ position:absolute;
+ inset:0;
+ pointer-events:none;
+ background:linear-gradient(transparent 55%,rgba(21,156,255,.13));
+ opacity:0;
+ transition:.3s
+}
+.manga:hover .cardGlow{opacity:1}
+@keyframes cardIn{
+ from{opacity:0;transform:translateY(16px)}
+ to{opacity:1;transform:none}
+}
+
+/* LOADING */
+.mangaSkeleton{
+ overflow:hidden;
+ border:1px solid rgba(61,161,255,.11);
+ background:#071321;
+ border-radius:17px
+}
+.skeletonCover{
+ width:100%;
+ aspect-ratio:2/3;
+ background:
+ linear-gradient(
+  100deg,
+  #071321 25%,
+  #0d2137 45%,
+  #071321 65%
+ );
+ background-size:250% 100%;
+ animation:skeletonMove 1.25s linear infinite
+}
+.skeletonInfo{
+ height:58px;
+ padding:11px
+}
+.skeletonLine{
+ height:9px;
+ border-radius:5px;
+ background:
+ linear-gradient(
+  100deg,
+  #0a1827 25%,
+  #12304b 45%,
+  #0a1827 65%
+ );
+ background-size:250% 100%;
+ animation:skeletonMove 1.25s linear infinite
+}
+.skeletonLine.short{
+ width:55%;
+ margin-top:9px
+}
+@keyframes skeletonMove{
+ 0%{background-position:200% 0}
+ 100%{background-position:-100% 0}
+}
+
+/* ERROR */
+.loadError{
+ grid-column:1/-1;
+ padding:32px 20px;
+ text-align:center;
+ border:1px solid rgba(255,82,120,.18);
+ border-radius:18px;
+ background:rgba(30,8,18,.35)
+}
+.loadError b{
+ display:block;
+ color:#ff7895;
+ font-size:14px;
+ margin-bottom:8px
+}
+.loadError p{
+ color:#718ca3;
+ font-size:11px;
+ line-height:1.6;
+ margin-bottom:16px
+}
+.retryBtn{
+ border:1px solid rgba(60,180,255,.25);
+ background:#092039;
+ color:#bfeaff;
+ border-radius:11px;
+ padding:10px 17px;
+ font-size:10px;
+ font-weight:900
+}
+.retryBtn:hover{
+ border-color:#159cff;
+ box-shadow:0 0 20px rgba(21,156,255,.16)
+}
+
+/* EMPTY */
+.empty{
+ padding:35px;
+ text-align:center;
+ color:#65819a;
+ border:1px dashed rgba(63,164,255,.15);
+ border-radius:18px
+}
+
+/* PAGINATION */
+.pagination{
+ display:flex;
+ justify-content:center;
+ gap:8px;
+ margin:24px 0
+}
+.pageBtn{
+ padding:10px 14px;
+ color:#8bb9d9;
+ border:1px solid rgba(63,164,255,.15);
+ background:#071321;
+ border-radius:10px
+}
+.pageBtn:hover{border-color:#159cff}
+.pageBtn.active{
+ background:#0a79c9;
+ color:white;
+ box-shadow:0 0 20px rgba(21,156,255,.18)
+}
+
+/* OVERLAY */
+.overlay{
+ position:fixed;
+ inset:0;
+ z-index:500;
+ display:none;
+ align-items:center;
+ justify-content:center;
+ padding:15px;
+ background:rgba(0,3,8,.74);
+ backdrop-filter:blur(12px)
+}
+.overlay.show{display:flex}
+.modal{
+ width:min(850px,100%);
+ max-height:90vh;
+ overflow:auto;
+ border:1px solid rgba(59,166,255,.2);
+ border-radius:22px;
+ background:#06111f;
+ box-shadow:0 30px 100px rgba(0,0,0,.6),0 0 45px rgba(0,125,255,.12);
+ animation:modalIn .35s cubic-bezier(.2,.8,.2,1)
+}
+@keyframes modalIn{
+ from{opacity:0;transform:translateY(25px) scale(.96)}
+ to{opacity:1;transform:none}
+}
+.modalHead{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ padding:15px 17px;
+ border-bottom:1px solid rgba(63,164,255,.12)
+}
+.close{
+ width:35px;
+ height:35px;
+ border-radius:10px;
+ border:1px solid rgba(63,164,255,.13);
+ background:#091827;
+ color:#9ec8e5
+}
+.modalBody{padding:18px}
+
+/* DETAIL */
+.detail{
+ display:grid;
+ grid-template-columns:180px 1fr;
+ gap:20px
+}
+.detailCover{
+ width:100%;
+ border-radius:15px;
+ border:1px solid rgba(63,164,255,.17)
+}
+.detail h2{font-size:23px}
+.detailDesc{
+ margin-top:12px;
+ color:#7795ae;
+ line-height:1.65;
+ font-size:13px
+}
+.tags{
+ display:flex;
+ flex-wrap:wrap;
+ gap:6px;
+ margin-top:12px
+}
+.tag{
+ font-size:9px;
+ padding:6px 8px;
+ border-radius:8px;
+ color:#68cbff;
+ background:rgba(18,150,255,.08);
+ border:1px solid rgba(18,150,255,.14)
+}
+.chapterList{
+ display:grid;
+ gap:7px;
+ margin-top:17px
+}
+.chapter{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ padding:10px;
+ border:1px solid rgba(63,164,255,.1);
+ border-radius:10px;
+ background:#071321;
+ color:#9ec6df;
+ text-decoration:none;
+ font-size:11px;
+ transition:.2s
+}
+.chapter:hover{
+ border-color:#159cff;
+ color:#fff
+}
+
+/* CHAT */
+.chatModal{
+ width:min(980px,100%);
+ height:min(760px,90vh);
+ display:flex;
+ flex-direction:column
+}
+.chatTabs{
+ display:flex;
+ gap:5px;
+ padding:10px 15px;
+ border-bottom:1px solid rgba(63,164,255,.1)
+}
+.tab{
+ padding:9px 13px;
+ border:0;
+ border-radius:10px;
+ background:transparent;
+ color:#6887a1
+}
+.tab.active{
+ color:#fff;
+ background:rgba(21,156,255,.12)
+}
+.chatBody{
+ display:flex;
+ flex:1;
+ min-height:0
+}
+.people{
+ width:220px;
+ overflow:auto;
+ border-right:1px solid rgba(63,164,255,.1);
+ padding:10px
+}
+.peopleSearch{
+ width:100%;
+ padding:10px;
+ border-radius:10px;
+ background:#071321;
+ border:1px solid rgba(63,164,255,.12);
+ outline:none;
+ color:#fff;
+ margin-bottom:8px
+}
+.person{
+ width:100%;
+ text-align:left;
+ border:0;
+ padding:10px;
+ border-radius:10px;
+ background:transparent;
+ color:#8eacc4;
+ margin-bottom:3px
+}
+.person:hover,.person.active{
+ background:rgba(21,156,255,.1);
+ color:#fff
+}
+.chatPanel{
+ flex:1;
+ min-width:0;
+ display:flex;
+ flex-direction:column
+}
+.chatTitle{
+ padding:11px 14px;
+ color:#9fc4df;
+ font-size:11px;
+ border-bottom:1px solid rgba(63,164,255,.08)
+}
+.messages{
+ flex:1;
+ overflow:auto;
+ padding:15px
+}
+.msg{
+ display:flex;
+ margin:7px 0;
+ animation:msgIn .25s ease
+}
+.msg.mine{justify-content:flex-end}
+.bubble{
+ max-width:min(75%,500px);
+ padding:9px 12px;
+ border-radius:14px;
+ background:#091a2d;
+ border:1px solid rgba(63,164,255,.1)
+}
+.mine .bubble{
+ background:linear-gradient(135deg,#075d9f,#0874bf);
+ border-color:rgba(100,210,255,.2)
+}
+.msgName{
+ font-size:9px;
+ color:#53c7ff;
+ margin-bottom:3px
+}
+.msgText{
+ font-size:12px;
+ line-height:1.5;
+ word-break:break-word
+}
+.msgTime{
+ margin-top:4px;
+ font-size:8px;
+ color:#7898b2
+}
+@keyframes msgIn{
+ from{opacity:0;transform:translateY(6px)}
+ to{opacity:1;transform:none}
+}
+.chatInput{
+ display:flex;
+ gap:8px;
+ padding:10px;
+ border-top:1px solid rgba(63,164,255,.1)
+}
+.chatInput input{
+ flex:1;
+ min-width:0;
+ color:#fff;
+ background:#071321;
+ border:1px solid rgba(63,164,255,.13);
+ border-radius:12px;
+ padding:12px;
+ outline:none
+}
+.send{
+ width:48px;
+ border:0;
+ border-radius:12px;
+ color:#fff;
+ background:linear-gradient(135deg,#087cff,#15c6ff)
+}
+
+/* PROFILE */
+.profileBox{
+ display:grid;
+ gap:12px
+}
+.profileLabel{
+ color:#6886a0;
+ font-size:10px
+}
+.profileInput{
+ width:100%;
+ padding:12px;
+ color:#fff;
+ background:#071321;
+ border:1px solid rgba(63,164,255,.14);
+ border-radius:11px;
+ outline:none
+}
+.primary{
+ width:100%;
+ border:0;
+ padding:12px;
+ border-radius:11px;
+ color:#fff;
+ background:linear-gradient(110deg,#087cff,#18c8ff);
+ font-weight:900
+}
+.secondary{
+ border:1px solid rgba(63,164,255,.16);
+ padding:12px;
+ border-radius:11px;
+ color:#9ac4df;
+ background:#071321
+}
+
+/* TOAST */
+.toast{
+ position:fixed;
+ left:50%;
+ bottom:22px;
+ z-index:99999;
+ transform:translate(-50%,20px);
+ opacity:0;
+ pointer-events:none;
+ max-width:90vw;
+ padding:11px 15px;
+ border-radius:12px;
+ background:#081a2c;
+ border:1px solid rgba(60,180,255,.25);
+ color:#dff6ff;
+ box-shadow:0 10px 35px rgba(0,0,0,.35);
+ font-size:11px;
+ transition:.3s
+}
+.toast.show{
+ opacity:1;
+ transform:translate(-50%,0)
+}
+
+/* RIPPLE */
+.ripple{
+ position:absolute;
+ border-radius:50%;
+ background:rgba(255,255,255,.23);
+ transform:scale(0);
+ animation:ripple .6s linear;
+ pointer-events:none
+}
+@keyframes ripple{
+ to{transform:scale(4);opacity:0}
+}
+
+/* RESPONSIVE */
+@media(max-width:760px){
+ .sidebar{display:none}
+ .content{padding:13px}
+ .brand{font-size:13px}
+ .search{display:none}
+ .hero{padding:21px}
+ .gridManga{
+  grid-template-columns:repeat(2,1fr);
+  gap:10px
+ }
+ .detail{
+  grid-template-columns:105px 1fr;
+  gap:13px
+ }
+ .detail h2{font-size:17px}
+ .people{display:none}
+ .bubble{max-width:86%}
+}
+</style>
+</head>
+
+<body>
+
+<div id="background">
+ <div class="grid"></div>
+ <div class="orb orb1"></div>
+ <div class="orb orb2"></div>
+ <div id="particles"></div>
+</div>
+
+<div id="cursorGlow"></div>
+
+<div id="app">
+
+<header class="topbar">
+
+ <div class="brand">
+  TAMZZY
+  <small>MANGADEX</small>
+ </div>
+
+ <div class="search">
+  <input
+   id="searchInput"
+   autocomplete="off"
+   placeholder="Cari manga..."
+  >
+ </div>
+
+ <button class="iconBtn rippleBtn" id="chatBtn">
+  CHAT
+ </button>
+
+ <button class="userBtn rippleBtn" id="accountBtn">
+  Guest
+ </button>
+
+</header>
+
+<div class="layout">
+
+<aside class="sidebar">
+
+ <div class="navTitle">MANGA</div>
+
+ <button class="navBtn active" id="homeBtn">HOME</button>
+ <button class="navBtn" id="latestBtn">MANGA TERBARU</button>
+ <button class="navBtn" id="bookmarkBtn">BOOKMARK</button>
+ <button class="navBtn" id="historyBtn">RIWAYAT</button>
+
+ <div class="navTitle" style="margin-top:22px">CHAT</div>
+
+ <button class="navBtn" id="globalBtn">GLOBAL CHAT</button>
+ <button class="navBtn" id="privateBtn">PRIVATE CHAT</button>
+
+ <div class="navTitle" style="margin-top:22px">SYSTEM</div>
+
+ <button class="navBtn" id="rulesBtn">RULES</button>
+ <button class="navBtn" id="accountSide">PROFILE</button>
+
+</aside>
+
+<main class="content">
+
+<section class="hero">
+
+ <h1>
+  MANGA<br>
+  <span>DEX</span>
+ </h1>
+
+ <p>
+  Jelajahi katalog manga dari MangaDex dan
+  ngobrol realtime melalui Global Chat atau
+  Private Chat.
+ </p>
+
+ <div class="stats">
+  <div class="stat">MANGADEX API</div>
+  <div class="stat">GLOBAL CHAT</div>
+  <div class="stat">PRIVATE CHAT</div>
+  <div class="stat">MODERATOR BOT</div>
+ </div>
+
+</section>
+
+<div class="sectionHead">
+
+ <h2 id="sectionTitle">EXPLORE MANGA</h2>
+
+ <select class="select" id="sortSelect">
+  <option value="latest">Terbaru</option>
+  <option value="relevance">Relevan</option>
+  <option value="title">Judul</option>
+ </select>
+
+</div>
+
+<div id="mangaGrid" class="gridManga"></div>
+
+<div id="empty" class="empty" style="display:none">
+ Manga tidak ditemukan.
+</div>
+
+<div class="pagination">
+
+ <button class="pageBtn" id="prevPage">PREV</button>
+
+ <button class="pageBtn active" id="pageLabel">1</button>
+
+ <button class="pageBtn" id="nextPage">NEXT</button>
+
+</div>
+
+</main>
+</div>
+</div>
+
+<!-- DETAIL -->
+<div class="overlay" id="detailOverlay">
+
+ <div class="modal">
+
+  <div class="modalHead">
+   <b>MANGA DETAIL</b>
+
+   <button class="close rippleBtn" data-close="detailOverlay">
+    ×
+   </button>
+  </div>
+
+  <div class="modalBody" id="detailBody"></div>
+
+ </div>
+</div>
+
+<!-- CHAT -->
+<div class="overlay" id="chatOverlay">
+
+ <div class="modal chatModal">
+
+  <div class="modalHead">
+   <b>REALTIME CHAT</b>
+
+   <button class="close rippleBtn" data-close="chatOverlay">
+    ×
+   </button>
+  </div>
+
+  <div class="chatTabs">
+
+   <button class="tab active" id="globalTab">
+    GLOBAL
+   </button>
+
+   <button class="tab" id="privateTab">
+    PRIVATE
+   </button>
+
+  </div>
+
+  <div class="chatBody">
+
+   <aside class="people" id="peoplePanel">
+
+    <input
+     id="peopleSearch"
+     class="peopleSearch"
+     placeholder="Cari user..."
+    >
+
+    <div id="peopleList"></div>
+
+   </aside>
+
+   <section class="chatPanel">
+
+    <div class="chatTitle" id="chatTitle">
+     Global Chat
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <form class="chatInput" id="chatForm">
+
+     <input
+      id="messageInput"
+      maxlength="500"
+      autocomplete="off"
+      placeholder="Tulis pesan..."
+     >
+
+     <button class="send rippleBtn">
+      SEND
+     </button>
+
+    </form>
+
+   </section>
+
+  </div>
+ </div>
+</div>
+
+<!-- PROFILE -->
+<div class="overlay" id="accountOverlay">
+
+ <div class="modal" style="max-width:430px">
+
+  <div class="modalHead">
+
+   <b>PROFILE</b>
+
+   <button class="close rippleBtn" data-close="accountOverlay">
+    ×
+   </button>
+
+  </div>
+
+  <div class="modalBody">
+
+   <div class="profileBox">
+
+    <div class="profileLabel">USERNAME</div>
+
+    <input
+     id="usernameInput"
+     class="profileInput"
+     maxlength="24"
+    >
+
+    <div class="profileLabel">SESSION ID</div>
+
+    <input
+     id="sessionInput"
+     class="profileInput"
+     readonly
+    >
+
+    <button id="saveProfile" class="primary rippleBtn">
+     SIMPAN NAMA
+    </button>
+
+   </div>
+
+  </div>
+ </div>
+</div>
+
+<!-- RULES -->
+<div class="overlay" id="rulesOverlay">
+
+ <div class="modal" style="max-width:600px">
+
+  <div class="modalHead">
+
+   <b>CHAT RULES</b>
+
+   <button class="close rippleBtn" data-close="rulesOverlay">
+    ×
+   </button>
+
+  </div>
+
+  <div class="modalBody">
+
+   <div style="
+    display:grid;
+    gap:12px;
+    color:#87a7c0;
+    font-size:13px;
+    line-height:1.65
+   ">
+
+    <div>01. Maksimal 500 karakter per pesan.</div>
+    <div>02. Spam karakter berulang ditolak.</div>
+    <div>03. Spam kata berulang ditolak.</div>
+    <div>04. Link diperiksa moderator bot.</div>
+    <div>05. Pesan yang masuk filter dapat ditolak.</div>
+    <div>06. Chat menggunakan Supabase Realtime.</div>
+
+   </div>
+
+  </div>
+ </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================
+   SUPABASE
+===================================== */
+
+const SUPABASE_URL=
+ "https://zxenffogictbqcuxxtgb.supabase.co";
+
+const SUPABASE_ANON_KEY=
+ "sb_publishable_J7zK1BgK50ElO_8D7fSi4g_6cIN0yv6";
+
+const supabaseClient=
+ window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+ );
+
+
+/* =====================================
+   STATE
+===================================== */
+
+let currentUser=null;
+let currentProfile=null;
+
+let mangaPage=1;
+let mangaMode="latest";
+
+let chatMode="global";
+let privateTarget=null;
+
+let globalChannel=null;
+let privateChannel=null;
+
+let globalMessages=[];
+let privateMessages=[];
+
+let allPeople=[];
+
+let lastMessageTime=0;
+
+let mangaRequestId=0;
+
+
+/* =====================================
+   MODERATOR
+===================================== */
+
+const blockedWords=[
+ "kata-terlarang-1",
+ "kata-terlarang-2"
+];
+
+const allowedDomains=[
+ "mangadex.org"
+];
+
+function moderateMessage(text){
+
+ const clean=text.trim();
+
+ if(!clean)
+  return{
+   ok:false,
+   reason:"Pesan kosong"
+  };
+
+ if(clean.length>500)
+  return{
+   ok:false,
+   reason:"Maksimal 500 karakter"
+  };
+
+ const lower=clean.toLowerCase();
+
+ for(const word of blockedWords){
+
+  if(lower.includes(word))
+   return{
+    ok:false,
+    reason:"Pesan ditolak moderator"
+   };
+
+ }
+
+ if(/(.)\1{9,}/i.test(clean))
+  return{
+   ok:false,
+   reason:"Spam karakter terdeteksi"
+  };
+
+ const words=lower.split(/\s+/).filter(Boolean);
+
+ let repeat=0;
+
+ for(
+  let i=1;
+  i<words.length;
+  i++
+ ){
+
+  if(words[i]===words[i-1])
+   repeat++;
+
+ }
+
+ if(repeat>=3)
+  return{
+   ok:false,
+   reason:"Spam kata terdeteksi"
+  };
+
+ const urls=
+  clean.match(/https?:\/\/[^\s]+/gi)||[];
+
+ for(const url of urls){
+
+  try{
+
+   const host=
+    new URL(url)
+     .hostname
+     .replace(/^www\./,"");
+
+   if(
+    !allowedDomains.some(
+     d=>host===d||
+     host.endsWith("."+d)
+    )
+   )
+    return{
+     ok:false,
+     reason:"Link tidak diizinkan"
+    };
+
+  }catch{
+
+   return{
+    ok:false,
+    reason:"URL tidak valid"
+   };
+
+  }
+
+ }
+
+ const now=Date.now();
+
+ if(now-lastMessageTime<3000)
+  return{
+   ok:false,
+   reason:"Tunggu 3 detik"
+  };
+
+ lastMessageTime=now;
+
+ return{ok:true};
+
+}
+
+
+/* =====================================
+   AUTH
+===================================== */
+
+async function ensureAnonymousSession(){
+
+ try{
+
+  const result=
+   await Promise.race([
+
+    supabaseClient
+     .auth
+     .getSession(),
+
+    new Promise(
+     (_,reject)=>
+      setTimeout(
+       ()=>reject(
+        new Error("AUTH_TIMEOUT")
+       ),
+       10000
+      )
+    )
+
+   ]);
+
+  const session=
+   result?.data?.session;
+
+  if(session?.user){
+
+   currentUser=session.user;
+
+   return true;
+
+  }
+
+  const authResult=
+   await Promise.race([
+
+    supabaseClient
+     .auth
+     .signInAnonymously(),
+
+    new Promise(
+     (_,reject)=>
+      setTimeout(
+       ()=>reject(
+        new Error("AUTH_TIMEOUT")
+       ),
+       10000
+      )
+    )
+
+   ]);
+
+  if(authResult.error)
+   throw authResult.error;
+
+  currentUser=
+   authResult.data?.user||
+   null;
+
+  return !!currentUser;
+
+ }catch(error){
+
+  console.error(
+   "Supabase auth:",
+   error
+  );
+
+  return false;
+
+ }
+
+}
+
+
+/* =====================================
+   PROFILE
+===================================== */
+
+async function ensureProfile(){
+
+ if(!currentUser)
+  return;
+
+ try{
+
+  const {
+   data,
+   error
+  }=
+   await supabaseClient
+    .from("chat_profiles")
+    .select("*")
+    .eq("id",currentUser.id)
+    .maybeSingle();
+
+  if(error)
+   throw error;
+
+  if(data){
+
+   currentProfile=data;
+
+   localStorage.setItem(
+    "manga_username",
+    data.username
+   );
+
+  }else{
+
+   let name=
+    localStorage.getItem(
+     "manga_username"
+    );
+
+   if(!name)
+    name="Guest-"+randomNumber();
+
+   const result=
+    await supabaseClient
+     .from("chat_profiles")
+     .insert({
+      id:currentUser.id,
+      username:name
+     })
+     .select()
+     .single();
+
+   if(result.error)
+    throw result.error;
+
+   currentProfile=result.data;
+
+   localStorage.setItem(
+    "manga_username",
+    name
+   );
+
+  }
+
+ }catch(error){
+
+  console.error(
+   "Profile:",
+   error
+  );
+
+  currentProfile={
+   id:currentUser.id,
+   username:
+    localStorage.getItem(
+     "manga_username"
+    )||
+    "Guest-"+randomNumber()
+  };
+
+ }
+
+ updateProfileUI();
+
+}
+
+
+function randomNumber(){
+
+ return Math.floor(
+  1000+
+  Math.random()*9000
+ );
+
+}
+
+
+function updateProfileUI(){
+
+ const name=
+  currentProfile?.username||
+  "Guest";
+
+ const account=
+  document.getElementById(
+   "accountBtn"
+  );
+
+ const username=
+  document.getElementById(
+   "usernameInput"
+  );
+
+ const session=
+  document.getElementById(
+   "sessionInput"
+  );
+
+ if(account)
+  account.textContent=name;
+
+ if(username)
+  username.value=name;
+
+ if(session)
+  session.value=
+   currentUser?.id||
+   "-";
+
+}
+
+
+/* =====================================
+   START APP
+   MangaDex TIDAK menunggu Supabase
+===================================== */
+
+async function startApp(){
+
+ /*
+  Manga langsung dimuat.
+  Chat/Auth berjalan sendiri.
+ */
+ loadManga(1);
+
+ try{
+
+  const auth=
+   await ensureAnonymousSession();
+
+  if(!auth){
+
+   toast(
+    "Chat belum tersambung. Manga tetap bisa digunakan."
+   );
+
+   return;
+
+  }
+
+  await ensureProfile();
+
+  await loadPeople();
+
+  subscribeGlobal();
+
+  subscribePrivate();
+
+ }catch(error){
+
+  console.error(
+   "Startup:",
+   error
+  );
+
+ }
+
+}
+
+startApp();
+
+
+/* =====================================
+   MANGADEX API
+===================================== */
+
+const MANGA_API=
+ "https://api.mangadex.org";
+
+
+function getTitle(manga){
+
+ const title=
+  manga.attributes?.title||
+  {};
+
+ return(
+  title.en||
+  title.id||
+  Object.values(title)[0]||
+  "Untitled Manga"
+ );
+
+}
+
+
+function getCover(manga){
+
+ const cover=
+  manga.relationships?.find(
+   x=>x.type==="cover_art"
+  );
+
+ if(!cover?.attributes?.fileName)
+  return "";
+
+ return(
+  "https://uploads.mangadex.org/covers/"+
+  manga.id+"/"+
+  cover.attributes.fileName+
+  ".256.jpg"
+ );
+
+}
+
+
+/* =====================================
+   FETCH WITH TIMEOUT
+===================================== */
+
+async function fetchWithTimeout(
+ url,
+ options={},
+ timeout=12000
+){
+
+ const controller=
+  new AbortController();
+
+ const timer=
+  setTimeout(
+   ()=>controller.abort(),
+   timeout
+  );
+
+ try{
+
+  const response=
+   await fetch(
+    url,
+    {
+     ...options,
+     signal:
+      controller.signal,
+     cache:"no-store"
+    }
+   );
+
+  clearTimeout(timer);
+
+  return response;
+
+ }catch(error){
+
+  clearTimeout(timer);
+
+  if(error.name==="AbortError")
+   throw new Error(
+    "TIMEOUT"
+   );
+
+  throw error;
+
+ }
+
+}
+
+
+/* =====================================
+   MANGA LOADING
+===================================== */
+
+function showMangaSkeleton(){
+
+ const grid=
+  document.getElementById(
+   "mangaGrid"
+  );
+
+ const empty=
+  document.getElementById(
+   "empty"
+  );
+
+ empty.style.display="none";
+
+ grid.innerHTML=
+  Array.from(
+   {length:8},
+   ()=>`
+
+   <div class="mangaSkeleton">
+
+    <div class="skeletonCover"></div>
+
+    <div class="skeletonInfo">
+
+     <div class="skeletonLine"></div>
+
+     <div class="skeletonLine short"></div>
+
+    </div>
+
+   </div>
+
+  `
+  ).join("");
+
+}
+
+
+function showMangaError(
+ message
+){
+
+ const grid=
+  document.getElementById(
+   "mangaGrid"
+  );
+
+ const empty=
+  document.getElementById(
+   "empty"
+  );
+
+ empty.style.display="none";
+
+ grid.innerHTML=`
+
+  <div class="loadError">
+
+   <b>GAGAL MEMUAT MANGA</b>
+
+   <p>
+    ${escapeHTML(message)}
+   </p>
+
+   <button
+    class="retryBtn rippleBtn"
+    id="retryManga">
+
+    COBA LAGI
+
+   </button>
+
+  </div>
+
+ `;
+
+ document.getElementById(
+  "retryManga"
+ ).onclick=()=>{
+
+  loadManga(
+   mangaPage
+  );
+
+ };
+
+}
+
+
+async function loadManga(
+ page=1
+){
+
+ const requestId=
+  ++mangaRequestId;
+
+ mangaPage=page;
+
+ showMangaSkeleton();
+
+ const grid=
+  document.getElementById(
+   "mangaGrid"
+  );
+
+ const empty=
+  document.getElementById(
+   "empty"
+  );
+
+ try{
+
+  const offset=
+   Math.max(
+    0,
+    (page-1)*24
+   );
+
+  const params=
+   new URLSearchParams();
+
+  params.set(
+   "limit",
+   "24"
+  );
+
+  params.set(
+   "offset",
+   String(offset)
+  );
+
+  params.append(
+   "includes[]",
+   "cover_art"
+  );
+
+  /*
+   Content rating dibuat aman dan
+   eksplisit supaya query valid.
+  */
+  params.append(
+   "contentRating[]",
+   "safe"
+  );
+
+  params.append(
+   "contentRating[]",
+   "suggestive"
+  );
+
+  if(mangaMode==="title"){
+
+   params.set(
+    "order[title]",
+    "asc"
+   );
+
+  }else if(
+   mangaMode==="relevance"
+  ){
+
+   /*
+    Tanpa query pencarian,
+    relevance tidak selalu cocok.
+    Gunakan latest sebagai fallback.
+   */
+   params.set(
+    "order[latestUploadedChapter]",
+    "desc"
+   );
+
+  }else{
+
+   params.set(
+    "order[latestUploadedChapter]",
+    "desc"
+   );
+
+  }
+
+  const query=
+   document.getElementById(
+    "searchInput"
+   ).value.trim();
+
+  if(query){
+
+   params.set(
+    "title",
+    query
+   );
+
+  }
+
+  /*
+   Filter manga supaya hanya yang
+   masih punya data title.
+  */
+  params.set(
+   "hasAvailableChapters",
+   "true"
+  );
+
+  const url=
+   MANGA_API+
+   "/manga?"+
+   params.toString();
+
+  console.log(
+   "MangaDex request:",
+   url
+  );
+
+  const response=
+   await fetchWithTimeout(
+    url,
+    {},
+    12000
+   );
+
+  /*
+   Kalau user sudah melakukan search
+   / page baru, hasil lama dibuang.
+  */
+  if(requestId!==mangaRequestId)
+   return;
+
+  if(!response.ok){
+
+   let detail=
+    "HTTP "+response.status;
+
+   if(response.status===429)
+    detail=
+     "MangaDex sedang membatasi request. Tunggu sebentar lalu coba lagi.";
+
+   else if(response.status>=500)
+    detail=
+     "Server MangaDex sedang bermasalah. Coba lagi beberapa saat.";
+
+   throw new Error(detail);
+
+  }
+
+  const data=
+   await response.json();
+
+  if(requestId!==mangaRequestId)
+   return;
+
+  const list=
+   Array.isArray(data?.data)
+    ?data.data
+    :[];
+
+  grid.innerHTML="";
+
+  if(!list.length){
+
+   empty.style.display="block";
+
+   empty.innerHTML=
+    query
+     ?"Manga dengan kata tersebut tidak ditemukan."
+     :"Manga belum tersedia.";
+
+   document.getElementById(
+    "pageLabel"
+   ).textContent=page;
+
+   return;
+
+  }
+
+  empty.style.display="none";
+
+  list.forEach(
+   (manga,index)=>{
+
+    grid.appendChild(
+     createMangaCard(
+      manga,
+      index
+     )
+    );
+
+   }
+  );
+
+  document.getElementById(
+   "pageLabel"
+  ).textContent=page;
+
+ }catch(error){
+
+  console.error(
+   "MangaDex:",
+   error
+  );
+
+  if(requestId!==mangaRequestId)
+   return;
+
+  let message=
+   "Periksa koneksi internet lalu coba lagi.";
+
+  if(error.message==="TIMEOUT")
+   message=
+    "Request MangaDex terlalu lama. Koneksi/API sedang lambat.";
+
+  else if(
+   error.message?.startsWith("HTTP")
+  )
+   message=
+    "Server MangaDex mengembalikan "+
+    error.message+". Coba lagi.";
+
+  showMangaError(
+   message
+  );
+
+ }
+
+}
+
+
+/* =====================================
+   MANGA CARD
+===================================== */
+
+function createMangaCard(
+ manga,
+ index
+){
+
+ const card=
+  document.createElement(
+   "article"
+  );
+
+ card.className="manga";
+
+ card.style.animationDelay=
+  Math.min(
+   index*35,
+   500
+  )+"ms";
+
+ const cover=
+  getCover(manga);
+
+ const title=
+  getTitle(manga);
+
+ const year=
+  manga.attributes?.year||
+  "—";
+
+ card.innerHTML=`
+
+  <img
+   class="cover"
+   src="${escapeHTML(cover)}"
+   loading="lazy"
+   alt="${escapeHTML(title)}"
+   onerror="
+    this.style.opacity='.25';
+    this.alt='Cover tidak tersedia'
+   ">
+
+  <div class="cardGlow"></div>
+
+  <div class="mangaInfo">
+
+   <div class="mangaTitle">
+    ${escapeHTML(title)}
+   </div>
+
+   <div class="mangaMeta">
+    ${escapeHTML(year)}
+    • MANGADEX
+   </div>
+
+  </div>
+
+ `;
+
+ card.onclick=()=>{
+  openManga(manga);
+ };
+
+ return card;
+
+}
+
+
+/* =====================================
+   DETAIL
+===================================== */
+
+async function openManga(
+ manga
+){
+
+ const body=
+  document.getElementById(
+   "detailBody"
+  );
+
+ showOverlay(
+  "detailOverlay"
+ );
+
+ const title=
+  getTitle(manga);
+
+ const cover=
+  getCover(manga);
+
+ const descriptions=
+  manga.attributes?.description||
+  {};
+
+ const description=
+  descriptions.en||
+  descriptions.id||
+  Object.values(
+   descriptions
+  )[0]||
+  "Tidak ada deskripsi.";
+
+ const tags=
+  manga.attributes?.tags||
+  [];
+
+ body.innerHTML=`
+
+  <div class="detail">
+
+   <div>
+
+    <img
+     class="detailCover"
+     src="${escapeHTML(cover)}"
+     alt="${escapeHTML(title)}">
+
+   </div>
+
+   <div>
+
+    <h2>
+     ${escapeHTML(title)}
+    </h2>
+
+    <div class="tags">
+
+     ${tags.slice(0,10)
+      .map(tag=>{
+
+       const name=
+        tag.attributes?.name?.en||
+        Object.values(
+         tag.attributes?.name||{}
+        )[0]||
+        "";
+
+       return`
+        <span class="tag">
+         ${escapeHTML(name)}
+        </span>
+       `;
+
+      }).join("")}
+
+    </div>
+
+    <div class="detailDesc">
+     ${escapeHTML(
+      description
+     ).slice(0,2200)}
+    </div>
+
+    <div style="
+     display:flex;
+     gap:8px;
+     flex-wrap:wrap;
+     margin-top:15px
+    ">
+
+     <button
+      class="primary rippleBtn"
+      id="bookmarkManga"
+      style="width:auto">
+
+      BOOKMARK
+
+     </button>
+
+     <a
+      class="secondary"
+      style="text-decoration:none"
+      target="_blank"
+      rel="noopener"
+      href="https://mangadex.org/title/${encodeURIComponent(manga.id)}">
+
+      MANGADEX
+
+     </a>
+
+    </div>
+
+    <div
+     class="chapterList"
+     id="chapterList">
+
+     Memuat chapter...
+
+    </div>
+
+   </div>
+
+  </div>
+
+ `;
+
+ saveHistory(manga);
+
+ document.getElementById(
+  "bookmarkManga"
+ ).onclick=()=>{
+  toggleBookmark(manga);
+ };
+
+ await loadChapters(
+  manga.id
+ );
+
+}
+
+
+async function loadChapters(id){
+
+ const box=
+  document.getElementById(
+   "chapterList"
+  );
+
+ try{
+
+  const params=
+   new URLSearchParams();
+
+  params.set(
+   "manga[]",
+   id
+  );
+
+  params.set(
+   "limit",
+   "30"
+  );
+
+  params.append(
+   "translatedLanguage[]",
+   "en"
+  );
+
+  params.append(
+   "translatedLanguage[]",
+   "id"
+  );
+
+  params.set(
+   "order[chapter]",
+   "desc"
+  );
+
+  const response=
+   await fetchWithTimeout(
+    MANGA_API+
+    "/chapter?"+
+    params.toString(),
+    {},
+    12000
+   );
+
+  if(!response.ok)
+   throw new Error(
+    "HTTP "+response.status
+   );
+
+  const data=
+   await response.json();
+
+  const chapters=
+   data.data||[];
+
+  if(!chapters.length){
+
+   box.innerHTML=`
+    <div class="empty">
+     Chapter belum tersedia.
+    </div>
+   `;
+
+   return;
+
+  }
+
+  box.innerHTML=
+   chapters.map(ch=>{
+
+    const attr=
+     ch.attributes||{};
+
+    const number=
+     attr.chapter||
+     "?";
+
+    const title=
+     attr.title||
+     "";
+
+    return`
+
+     <a
+      class="chapter"
+      target="_blank"
+      rel="noopener"
+      href="https://mangadex.org/chapter/${encodeURIComponent(ch.id)}">
+
+      <span>
+       Chapter
+       ${escapeHTML(number)}
+       ${
+        title
+         ?" — "+escapeHTML(title)
+         :""
+       }
+      </span>
+
+      <span>OPEN</span>
+
+     </a>
+
+    `;
+
+   }).join("");
+
+ }catch(error){
+
+  console.error(
+   "Chapters:",
+   error
+  );
+
+  box.innerHTML=`
+   <div class="empty">
+    Gagal mengambil chapter.
+   </div>
+  `;
+
+ }
+
+}
+
+
+/* =====================================
+   BOOKMARK / HISTORY
+===================================== */
+
+function getStorage(key){
+
+ try{
+
+  return JSON.parse(
+   localStorage.getItem(key)||"[]"
+  );
+
+ }catch{
+
+  return[];
+
+ }
+
+}
+
+
+function setStorage(
+ key,
+ value
+){
+
+ localStorage.setItem(
+  key,
+  JSON.stringify(value)
+ );
+
+}
+
+
+function saveHistory(manga){
+
+ let list=
+  getStorage(
+   "manga_history"
+  );
+
+ list=
+  list.filter(
+   x=>x.id!==manga.id
+  );
+
+ list.unshift({
+  id:manga.id,
+  title:getTitle(manga),
+  cover:getCover(manga)
+ });
+
+ setStorage(
+  "manga_history",
+  list.slice(0,30)
+ );
+
+}
+
+
+function toggleBookmark(manga){
+
+ let list=
+  getStorage(
+   "manga_bookmarks"
+  );
+
+ const exists=
+  list.some(
+   x=>x.id===manga.id
+  );
+
+ if(exists){
+
+  list=
+   list.filter(
+    x=>x.id!==manga.id
+   );
+
+  toast(
+   "Bookmark dihapus"
+  );
+
+ }else{
+
+  list.unshift({
+   id:manga.id,
+   title:getTitle(manga),
+   cover:getCover(manga)
+  });
+
+  toast(
+   "Ditambahkan ke bookmark"
+  );
+
+ }
+
+ setStorage(
+  "manga_bookmarks",
+  list.slice(0,100)
+ );
+
+}
+
+
+/* =====================================
+   LOCAL MANGA
+===================================== */
+
+function renderLocalManga(
+ key,
+ title
+){
+
+ const list=
+  getStorage(key);
+
+ document.getElementById(
+  "sectionTitle"
+ ).textContent=title;
+
+ const grid=
+  document.getElementById(
+   "mangaGrid"
+  );
+
+ document.getElementById(
+  "empty"
+ ).style.display="none";
+
+ if(!list.length){
+
+  grid.innerHTML=`
+   <div class="empty">
+    Belum ada data.
+   </div>
+  `;
+
+  return;
+
+ }
+
+ grid.innerHTML="";
+
+ list.forEach(
+  (manga,index)=>{
+
+   const card=
+    document.createElement(
+     "article"
+    );
+
+   card.className="manga";
+
+   card.style.animationDelay=
+    index*30+"ms";
+
+   card.innerHTML=`
+
+    <img
+     class="cover"
+     src="${escapeHTML(manga.cover)}"
+     loading="lazy"
+     alt="${escapeHTML(manga.title)}">
+
+    <div class="cardGlow"></div>
+
+    <div class="mangaInfo">
+
+     <div class="mangaTitle">
+      ${escapeHTML(manga.title)}
+     </div>
+
+     <div class="mangaMeta">
+      SAVED
+     </div>
+
+    </div>
+
+   `;
+
+   card.onclick=()=>{
+    openMangaById(manga.id);
+   };
+
+   grid.appendChild(card);
+
+  }
+ );
+
+}
+
+
+async function openMangaById(id){
+
+ try{
+
+  const response=
+   await fetchWithTimeout(
+    MANGA_API+
+    "/manga/"+
+    encodeURIComponent(id)+
+    "?includes[]=cover_art",
+    {},
+    12000
+   );
+
+  if(!response.ok)
+   throw new Error(
+    "HTTP "+response.status
+   );
+
+  const data=
+   await response.json();
+
+  if(data.data)
+   openManga(data.data);
+
+ }catch{
+
+  toast(
+   "Manga tidak ditemukan"
+  );
+
+ }
+
+}
+
+
+/* =====================================
+   CHAT
+===================================== */
+
+async function openChat(
+ mode="global"
+){
+
+ /*
+  Chat tidak menghalangi manga.
+  Kalau auth belum selesai, tunggu
+  sebentar sampai siap.
+ */
+ if(!currentUser){
+
+  toast(
+   "Menghubungkan chat..."
+  );
+
+  const ready=
+   await ensureAnonymousSession();
+
+  if(!ready){
+
+   toast(
+    "Chat belum tersambung ke Supabase."
+   );
+
+   return;
+
+  }
+
+  await ensureProfile();
+
+  await loadPeople();
+
+  subscribeGlobal();
+
+  subscribePrivate();
+
+ }
+
+ showOverlay(
+  "chatOverlay"
+ );
+
+ switchChat(mode);
+
+}
+
+
+function switchChat(mode){
+
+ chatMode=mode;
+
+ document.getElementById(
+  "globalTab"
+ ).classList.toggle(
+  "active",
+  mode==="global"
+ );
+
+ document.getElementById(
+  "privateTab"
+ ).classList.toggle(
+  "active",
+  mode==="private"
+ );
+
+ document.getElementById(
+  "peoplePanel"
+ ).style.display=
+  mode==="private"
+   ?"block"
+   :"none";
+
+ if(mode==="global"){
+
+  privateTarget=null;
+
+  document.getElementById(
+   "chatTitle"
+  ).textContent=
+   "Global Chat";
+
+  loadGlobalMessages();
+
+ }else{
+
+  document.getElementById(
+   "chatTitle"
+  ).textContent=
+   privateTarget
+    ?"Private • "+
+     privateTarget.username
+    :"Pilih user";
+
+  if(privateTarget)
+   loadPrivateMessages();
+
+ }
+
+ renderMessages();
+
+}
+
+
+/* =====================================
+   GLOBAL CHAT
+===================================== */
+
+async function loadGlobalMessages(){
+
+ if(!currentUser)
+  return;
+
+ const {
+  data,
+  error
+ }=
+  await supabaseClient
+   .from("global_chat")
+   .select("*")
+   .order(
+    "created_at",
+    {ascending:true}
+   )
+   .limit(100);
+
+ if(error){
+
+  console.error(error);
+
+  toast(
+   "Gagal mengambil Global Chat"
+  );
+
+  return;
+
+ }
+
+ globalMessages=
+  data||[];
+
+ renderMessages();
+
+}
+
+
+function subscribeGlobal(){
+
+ if(!currentUser)
+  return;
+
+ if(globalChannel){
+
+  supabaseClient.removeChannel(
+   globalChannel
+  );
+
+ }
+
+ globalChannel=
+  supabaseClient
+   .channel(
+    "global_chat_realtime"
+   )
+   .on(
+    "postgres_changes",
+    {
+     event:"INSERT",
+     schema:"public",
+     table:"global_chat"
+    },
+    payload=>{
+
+     globalMessages.push(
+      payload.new
+     );
+
+     globalMessages=
+      globalMessages.slice(-100);
+
+     if(chatMode==="global")
+      renderMessages();
+
+    }
+   )
+   .subscribe();
+
+}
+
+
+/* =====================================
+   PRIVATE
+===================================== */
+
+async function loadPeople(){
+
+ if(!currentUser)
+  return;
+
+ const {
+  data,
+  error
+ }=
+  await supabaseClient
+   .from("chat_profiles")
+   .select(
+    "id,username,avatar_url"
+   )
+   .neq(
+    "id",
+    currentUser.id
+   )
+   .order(
+    "username"
+   );
+
+ if(error){
+
+  console.error(error);
+
+  return;
+
+ }
+
+ allPeople=data||[];
+
+ renderPeople();
+
+}
+
+
+function renderPeople(){
+
+ const list=
+  document.getElementById(
+   "peopleList"
+  );
+
+ const q=
+  document.getElementById(
+   "peopleSearch"
+  ).value
+   .trim()
+   .toLowerCase();
+
+ const filtered=
+  allPeople.filter(
+   person=>
+    String(
+     person.username||""
+    )
+    .toLowerCase()
+    .includes(q)
+  );
+
+ if(!filtered.length){
+
+  list.innerHTML=`
+   <div style="
+    padding:15px;
+    color:#58738b;
+    font-size:11px
+   ">
+    Tidak ada user.
+   </div>
+  `;
+
+  return;
+
+ }
+
+ list.innerHTML=
+  filtered.map(
+   person=>`
+
+    <button
+     class="person ${
+      privateTarget?.id===person.id
+       ?"active":""
+     }"
+     data-id="${escapeHTML(person.id)}">
+
+     ${escapeHTML(
+      person.username
+     )}
+
+    </button>
+
+   `
+  ).join("");
+
+ list.querySelectorAll(
+  ".person"
+ ).forEach(
+  button=>{
+
+   button.onclick=()=>{
+
+    privateTarget=
+     allPeople.find(
+      person=>
+       person.id===
+       button.dataset.id
+     );
+
+    if(!privateTarget)
+     return;
+
+    document.getElementById(
+     "chatTitle"
+    ).textContent=
+     "Private • "+
+     privateTarget.username;
+
+    renderPeople();
+
+    loadPrivateMessages();
+
+   };
+
+  }
+ );
+
+}
+
+
+document.getElementById(
+ "peopleSearch"
+).addEventListener(
+ "input",
+ renderPeople
+);
+
+
+async function loadPrivateMessages(){
+
+ if(
+  !currentUser||
+  !privateTarget
+ )
+  return;
+
+ const {
+  data,
+  error
+ }=
+  await supabaseClient
+   .from("private_messages")
+   .select("*")
+   .or(
+    `and(sender_id.eq.${currentUser.id},receiver_id.eq.${privateTarget.id}),and(sender_id.eq.${privateTarget.id},receiver_id.eq.${currentUser.id})`
+   )
+   .order(
+    "created_at",
+    {ascending:true}
+   )
+   .limit(100);
+
+ if(error){
+
+  console.error(error);
+
+  return;
+
+ }
+
+ privateMessages=data||[];
+
+ renderMessages();
+
+}
+
+
+function subscribePrivate(){
+
+ if(!currentUser)
+  return;
+
+ if(privateChannel){
+
+  supabaseClient.removeChannel(
+   privateChannel
+  );
+
+ }
+
+ privateChannel=
+  supabaseClient
+   .channel(
+    "private_"+currentUser.id
+   )
+   .on(
+    "postgres_changes",
+    {
+     event:"INSERT",
+     schema:"public",
+     table:"private_messages"
+    },
+    payload=>{
+
+     const message=
+      payload.new;
+
+     if(
+      message.sender_id===
+       currentUser.id||
+      message.receiver_id===
+       currentUser.id
+     ){
+
+      privateMessages.push(
+       message
+      );
+
+      privateMessages=
+       privateMessages.slice(-100);
+
+      if(chatMode==="private")
+       renderMessages();
+
+     }
+
+    }
+   )
+   .subscribe();
+
+}
+
+
+/* =====================================
+   SEND
+===================================== */
+
+async function sendGlobal(
+ content
+){
+
+ const {
+  error
+ }=
+  await supabaseClient
+   .from("global_chat")
+   .insert({
+    sender_id:
+     currentUser.id,
+    sender_name:
+     currentProfile?.username||
+     "Guest",
+    content,
+    is_bot:false
+   });
+
+ if(error){
+
+  console.error(error);
+
+  toast(
+   "Pesan gagal dikirim"
+  );
+
+ }
+
+}
+
+
+async function sendPrivate(
+ content
+){
+
+ if(!privateTarget)
+  return;
+
+ const {
+  error
+ }=
+  await supabaseClient
+   .from("private_messages")
+   .insert({
+    sender_id:
+     currentUser.id,
+    receiver_id:
+     privateTarget.id,
+    content
+   });
+
+ if(error){
+
+  console.error(error);
+
+  toast(
+   "Pesan gagal dikirim"
+  );
+
+ }
+
+}
+
+
+document.getElementById(
+ "chatForm"
+).addEventListener(
+ "submit",
+ async event=>{
+
+  event.preventDefault();
+
+  if(!currentUser)
+   return;
+
+  const input=
+   document.getElementById(
+    "messageInput"
+   );
+
+  const text=
+   input.value.trim();
+
+  const result=
+   moderateMessage(text);
+
+  if(!result.ok){
+
+   toast(
+    result.reason
+   );
+
+   return;
+
+  }
+
+  if(chatMode==="global"){
+
+   await sendGlobal(text);
+
+  }else{
+
+   if(!privateTarget){
+
+    toast(
+     "Pilih user terlebih dahulu"
+    );
+
+    return;
+
+   }
+
+   await sendPrivate(text);
+
+  }
+
+  input.value="";
+
+ }
+);
+
+
+/* =====================================
+   RENDER MESSAGES
+===================================== */
+
+function renderMessages(){
+
+ const box=
+  document.getElementById(
+   "messages"
+  );
+
+ if(chatMode==="private"){
+
+  if(!privateTarget){
+
+   box.innerHTML=`
+    <div class="empty">
+     Pilih user untuk memulai
+     private chat.
+    </div>
+   `;
+
+   return;
+
+  }
+
+  box.innerHTML=
+   privateMessages
+    .map(
+     message=>{
+
+      const mine=
+       message.sender_id===
+       currentUser?.id;
+
+      return messageHTML(
+       message.content,
+       mine,
+       mine
+        ?currentProfile?.username
+        :privateTarget.username,
+       message.created_at
+      );
+
+     }
+    )
+    .join("");
+
+ }else{
+
+  if(!globalMessages.length){
+
+   box.innerHTML=`
+    <div class="empty">
+     Belum ada pesan.
+    </div>
+   `;
+
+   return;
+
+  }
+
+  box.innerHTML=
+   globalMessages
+    .map(
+     message=>{
+
+      const mine=
+       message.sender_id===
+       currentUser?.id;
+
+      return messageHTML(
+       message.content,
+       mine,
+       message.sender_name||
+        "Guest",
+       message.created_at
+      );
+
+     }
+    )
+    .join("");
+
+ }
+
+ box.scrollTop=
+  box.scrollHeight;
+
+}
+
+
+function messageHTML(
+ text,
+ mine,
+ name,
+ created
+){
+
+ const time=
+  created
+   ?new Date(created)
+    .toLocaleTimeString(
+     "id-ID",
+     {
+      hour:"2-digit",
+      minute:"2-digit"
+     }
+    )
+   :"";
+
+ return`
+
+  <div class="msg ${
+   mine?"mine":""
+  }">
+
+   <div class="bubble">
+
+    <div class="msgName">
+     ${escapeHTML(name||"Guest")}
+    </div>
+
+    <div class="msgText">
+     ${escapeHTML(text)}
+    </div>
+
+    <div class="msgTime">
+     ${time}
+    </div>
+
+   </div>
+
+  </div>
+
+ `;
+
+}
+
+
+/* =====================================
+   SEARCH
+===================================== */
+
+let searchTimer=null;
+
+document.getElementById(
+ "searchInput"
+).addEventListener(
+ "input",
+ ()=>{
+
+  clearTimeout(searchTimer);
+
+  searchTimer=
+   setTimeout(
+    ()=>{
+
+     document.getElementById(
+      "sectionTitle"
+     ).textContent=
+      "EXPLORE MANGA";
+
+     loadManga(1);
+
+    },
+    450
+   );
+
+ }
+);
+
+
+/* =====================================
+   SORT
+===================================== */
+
+document.getElementById(
+ "sortSelect"
+).addEventListener(
+ "change",
+ event=>{
+
+  mangaMode=
+   event.target.value;
+
+  loadManga(1);
+
+ }
+);
+
+
+/* =====================================
+   PAGINATION
+===================================== */
+
+document.getElementById(
+ "prevPage"
+).onclick=()=>{
+
+ if(mangaPage>1)
+  loadManga(
+   mangaPage-1
+  );
+
+};
+
+
+document.getElementById(
+ "nextPage"
+).onclick=()=>{
+
+ loadManga(
+  mangaPage+1
+ );
+
+};
+
+
+/* =====================================
+   NAV
+===================================== */
+
+document.getElementById(
+ "homeBtn"
+).onclick=()=>{
+
+ document.getElementById(
+  "sectionTitle"
+ ).textContent=
+  "EXPLORE MANGA";
+
+ mangaMode="latest";
+
+ document.getElementById(
+  "sortSelect"
+ ).value="latest";
+
+ loadManga(1);
+
+};
+
+
+document.getElementById(
+ "latestBtn"
+).onclick=()=>{
+
+ document.getElementById(
+  "sectionTitle"
+ ).textContent=
+  "MANGA TERBARU";
+
+ mangaMode="latest";
+
+ document.getElementById(
+  "sortSelect"
+ ).value="latest";
+
+ loadManga(1);
+
+};
+
+
+document.getElementById(
+ "bookmarkBtn"
+).onclick=()=>{
+
+ renderLocalManga(
+  "manga_bookmarks",
+  "BOOKMARK"
+ );
+
+};
+
+
+document.getElementById(
+ "historyBtn"
+).onclick=()=>{
+
+ renderLocalManga(
+  "manga_history",
+  "RIWAYAT"
+ );
+
+};
+
+
+/* =====================================
+   CHAT BUTTONS
+===================================== */
+
+document.getElementById(
+ "chatBtn"
+).onclick=()=>{
+ openChat("global");
+};
+
+document.getElementById(
+ "globalBtn"
+).onclick=()=>{
+ openChat("global");
+};
+
+document.getElementById(
+ "privateBtn"
+).onclick=()=>{
+ openChat("private");
+};
+
+document.getElementById(
+ "globalTab"
+).onclick=()=>{
+ switchChat("global");
+};
+
+document.getElementById(
+ "privateTab"
+).onclick=()=>{
+ switchChat("private");
+};
+
+
+/* =====================================
+   PROFILE
+===================================== */
+
+function openProfile(){
+
+ updateProfileUI();
+
+ showOverlay(
+  "accountOverlay"
+ );
+
+}
+
+
+document.getElementById(
+ "accountBtn"
+).onclick=
+ openProfile;
+
+document.getElementById(
+ "accountSide"
+).onclick=
+ openProfile;
+
+
+document.getElementById(
+ "saveProfile"
+).onclick=
+ async()=>{
+
+  if(!currentUser)
+   return;
+
+  const input=
+   document.getElementById(
+    "usernameInput"
+   );
+
+  const username=
+   input.value.trim();
+
+  if(username.length<3){
+
+   toast(
+    "Nama minimal 3 karakter"
+   );
+
+   return;
+
+  }
+
+  const {
+   error
+  }=
+   await supabaseClient
+    .from("chat_profiles")
+    .update({
+     username
+    })
+    .eq(
+     "id",
+     currentUser.id
+    );
+
+  if(error){
+
+   console.error(error);
+
+   toast(
+    "Gagal menyimpan nama"
+   );
+
+   return;
+
+  }
+
+  currentProfile.username=
+   username;
+
+  localStorage.setItem(
+   "manga_username",
+   username
+  );
+
+  updateProfileUI();
+
+  await loadPeople();
+
+  toast(
+   "Nama berhasil disimpan"
+  );
+
+ };
+
+
+/* =====================================
+   RULES
+===================================== */
+
+document.getElementById(
+ "rulesBtn"
+).onclick=()=>{
+
+ showOverlay(
+  "rulesOverlay"
+ );
+
+};
+
+
+/* =====================================
+   MODALS
+===================================== */
+
+function showOverlay(id){
+
+ document.getElementById(
+  id
+ ).classList.add(
+  "show"
+ );
+
+}
+
+
+function closeOverlay(id){
+
+ document.getElementById(
+  id
+ ).classList.remove(
+  "show"
+ );
+
+}
+
+
+document.querySelectorAll(
+ "[data-close]"
+).forEach(
+ button=>{
+
+  button.onclick=()=>{
+
+   closeOverlay(
+    button.dataset.close
+   );
+
+  };
+
+ }
+);
+
+
+document.querySelectorAll(
+ ".overlay"
+).forEach(
+ overlay=>{
+
+  overlay.addEventListener(
+   "click",
+   event=>{
+
+    if(event.target===overlay)
+     overlay.classList.remove(
+      "show"
+     );
+
+   }
+  );
+
+ }
+);
+
+
+/* =====================================
+   PARTICLES
+===================================== */
+
+function createParticles(){
+
+ const box=
+  document.getElementById(
+   "particles"
+  );
+
+ for(
+  let i=0;
+  i<42;
+  i++
+ ){
+
+  const particle=
+   document.createElement(
+    "i"
+   );
+
+  particle.className="particle";
+
+  particle.style.left=
+   Math.random()*100+"%";
+
+  particle.style.animationDuration=
+   7+
+   Math.random()*12+
+   "s";
+
+  particle.style.animationDelay=
+   -Math.random()*15+
+   "s";
+
+  particle.style.opacity=
+   .2+
+   Math.random()*.6;
+
+  box.appendChild(
+   particle
+  );
+
+ }
+
+}
+
+createParticles();
+
+
+/* =====================================
+   CURSOR
+===================================== */
+
+const cursorGlow=
+ document.getElementById(
+  "cursorGlow"
+ );
+
+window.addEventListener(
+ "pointermove",
+ event=>{
+
+  cursorGlow.style.left=
+   event.clientX+"px";
+
+  cursorGlow.style.top=
+   event.clientY+"px";
+
+ },
+ {passive:true}
+);
+
+
+/* =====================================
+   RIPPLE
+===================================== */
+
+document.addEventListener(
+ "click",
+ event=>{
+
+  const target=
+   event.target.closest(
+    ".rippleBtn"
+   );
+
+  if(!target)
+   return;
+
+  const rect=
+   target.getBoundingClientRect();
+
+  const ripple=
+   document.createElement(
+    "span"
+   );
+
+  ripple.className="ripple";
+
+  const size=
+   Math.max(
+    rect.width,
+    rect.height
+   );
+
+  ripple.style.width=size+"px";
+  ripple.style.height=size+"px";
+
+  ripple.style.left=
+   event.clientX-
+   rect.left-
+   size/2+"px";
+
+  ripple.style.top=
+   event.clientY-
+   rect.top-
+   size/2+"px";
+
+  target.style.position="relative";
+  target.style.overflow="hidden";
+
+  target.appendChild(ripple);
+
+  setTimeout(
+   ()=>ripple.remove(),
+   650
+  );
+
+ });
+
+
+/* =====================================
+   TOAST
+===================================== */
+
+let toastTimer=null;
+
+function toast(message){
+
+ const element=
+  document.getElementById(
+   "toast"
+  );
+
+ element.textContent=message;
+
+ element.classList.add("show");
+
+ clearTimeout(toastTimer);
+
+ toastTimer=
+  setTimeout(
+   ()=>{
+    element.classList.remove("show");
+   },
+   2500
+  );
+
+}
+
+
+/* =====================================
+   ESCAPE
+===================================== */
+
+function escapeHTML(value){
+
+ return String(value??"")
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;")
+  .replace(/'/g,"&#039;");
+
+}
+
+
+/* =====================================
+   CLEANUP
+===================================== */
+
+window.addEventListener(
+ "beforeunload",
+ ()=>{
+
+  if(globalChannel)
+   supabaseClient.removeChannel(
+    globalChannel
+   );
+
+  if(privateChannel)
+   supabaseClient.removeChannel(
+    privateChannel
+   );
+
+ }
+);
+</script>
+
+</body>
+  </html>w
